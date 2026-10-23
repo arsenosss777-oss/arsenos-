@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050807">
+<title>ARSENOS | Cyber Security</title>
+<style>
+:root{--bg:#050807;--panel:#0a1410;--green:#38ff87;--muted:#9ab7a6;--line:#17452e;--danger:#ffcc66}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#0b2417 0,#050807 55%);color:#e8fff0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+canvas#matrix{position:fixed;inset:0;width:100%;height:100%;opacity:.16;pointer-events:none;z-index:-1}
+.wrap{width:min(100% - 28px,1000px);margin:auto;padding:22px 0 45px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0 24px;border-bottom:1px solid var(--line)}
+.logo{font-weight:900;letter-spacing:3px;color:var(--green);font-size:clamp(22px,5vw,34px);text-shadow:0 0 18px #38ff8755}
+.pill{border:1px solid var(--line);border-radius:999px;padding:7px 11px;color:var(--muted);font-size:12px}
+.hero{text-align:center;padding:35px 0 25px}
+h1{font-size:clamp(28px,7vw,48px);margin:0 0 10px}
+h1 span{color:var(--green);text-shadow:0 0 22px #38ff8755}
+.sub{color:var(--muted);max-width:650px;margin:0 auto;line-height:1.8}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.card{background:linear-gradient(145deg,#0b1711eF,#07100cf2);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 12px 35px #0005;min-width:0}
+.card h2{font-size:17px;margin:0 0 12px;color:var(--green)}
+.big{font-size:clamp(18px,4vw,25px);font-weight:750;overflow-wrap:anywhere;margin:7px 0}
+.small{font-size:13px;color:var(--muted);line-height:1.7}
+button{font:inherit;border:1px solid #2b9e5b;background:#0b2818;color:var(--green);border-radius:10px;padding:10px 13px;cursor:pointer;font-weight:700}
+button:hover{background:#103b23}
+button:disabled{opacity:.5;cursor:wait}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.status{color:var(--muted);font-size:13px;margin-top:10px;line-height:1.7}
+input{width:100%;background:#030906;color:#e8fff0;border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;direction:ltr;text-align:left;margin:7px 0 10px}
+.note{border-right:3px solid var(--danger);padding:10px 12px;background:#241d0b55;color:#f9e8ba;border-radius:8px;font-size:13px;line-height:1.8;margin-top:15px}
+footer{text-align:center;color:#668a74;font-size:12px;padding-top:24px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}.wrap{width:min(100% - 20px,1000px)}header{align-items:flex-start}.pill{max-width:55%;text-align:center}}
+</style>
+</head>
+<body>
+<canvas id="matrix" aria-hidden="true"></canvas>
+<div class="wrap">
+<header><div class="logo">ARSENOS<span style="color:#e8fff0">_</span></div><div class="pill">CYBERSECURITY • AUTHORIZED USE</div></header>
+<section class="hero">
+<h1>مرحبًا بك في <span>ARSENOS</span></h1>
+<p class="sub">لوحة بسيطة لمعلومات عنوان IP وفحص الاتصال الأساسي. استخدم أدوات الفحص فقط على شبكتك أو على أجهزة لديك إذن صريح باختبارها.</p>
+</section>
+<main class="grid">
+<section class="card">
+<h2>◉ عنوان IP العام</h2>
+<div id="publicIp" class="big">لم يتم الجلب بعد</div>
+<div class="small">العنوان الذي يظهر للخدمات على الإنترنت.</div>
+<div class="row" style="margin-top:13px"><button id="getPublic">اعرف الـ IP العام</button><button id="copyPublic">نسخ</button></div>
+<div id="publicStatus" class="status" aria-live="polite">اضغط لجلب عنوان IP من خدمة خارجية.</div>
+</section>
+<section class="card">
+<h2>⌁ عنوان IP المحلي</h2>
+<div class="big" id="localIp">غير متاح من المتصفح مباشرة</div>
+<div class="small">المتصفحات الحديثة تمنع غالبًا كشف IP المحلي مباشرةً لأسباب الخصوصية.</div>
+<div class="status">على أندرويد: الإعدادات ← الاتصالات ← Wi‑Fi ← اضغط على الشبكة المتصل بها ← تفاصيل الشبكة.</div>
+</section>
+<section class="card">
+<h2>⌖ معلومات تقريبية عن IP</h2>
+<label for="ipInput" class="small">أدخل عنوان IP عامًّا (اختياري)</label>
+<input id="ipInput" placeholder="مثال: 8.8.8.8" inputmode="decimal" autocomplete="off">
+<div class="row"><button id="lookup">عرض المعلومات</button><button id="usePublic">استخدم IP الحالي</button></div>
+<div id="lookupResult" class="status" aria-live="polite">قد تشمل النتيجة البلد والمنطقة والمدينة ومزوّد الإنترنت، وليست موقعًا دقيقًا.</div>
+</section>
+<section class="card">
+<h2>⌘ فحص اتصال الشبكة</h2>
+<p class="small">هذا فحص آمن من المتصفح: يختبر الوصول إلى خدمات عامة ويعرض حالة الاتصال فقط. لا يفحص الأجهزة الأخرى أو المنافذ.</p>
+<div class="row"><button id="checkNet">اختبار الاتصال</button></div>
+<div id="netResult" class="status" aria-live="polite">لم يبدأ الفحص بعد.</div>
+</section>
+</main>
+<div class="note">تنبيه: لا يمكن لصفحة ويب عادية قراءة قائمة الأجهزة المتصلة بشبكة Wi‑Fi أو إجراء فحص شامل لها. استخدم لوحة تحكم الراوتر أو أداة موثوقة على شبكة تملكها أو لديك إذن بفحصها.</div>
+<footer>ARSENOS © — واجهة تعليمية • لا يتم تخزين بياناتك داخل هذه الصفحة</footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let currentPublicIp='';
+$('getPublic').addEventListener('click',async()=>{
+ const b=$('getPublic');b.disabled=true;$('publicStatus').textContent='جارٍ الاتصال بخدمة IP…';
+ try{
+  const r=await fetch('https://api.ipify.org?format=json',{cache:'no-store'});
+  if(!r.ok)throw new Error('تعذر الاتصال بالخدمة');
+  const d=await r.json();currentPublicIp=d.ip;$('publicIp').textContent=d.ip;$('publicStatus').textContent='تم جلب العنوان بنجاح.';$('ipInput').value=d.ip;
+ }catch(e){$('publicStatus').textContent='لم نتمكن من جلب IP. تحقق من الإنترنت أو جرّب لاحقًا.'}
+ finally{b.disabled=false}
+});
+$('copyPublic').addEventListener('click',async()=>{
+ if(!currentPublicIp){$('publicStatus').textContent='اعرف الـ IP أولًا.';return}
+ try{await navigator.clipboard.writeText(currentPublicIp);$('publicStatus').textContent='تم نسخ العنوان.'}
+ catch(e){$('publicStatus').textContent='تعذر النسخ تلقائيًا؛ حدّد العنوان وانسخه يدويًا.'}
+});
+$('usePublic').addEventListener('click',()=>{if(currentPublicIp)$('ipInput').value=currentPublicIp;else $('lookupResult').textContent='اضغط أولًا على «اعرف الـ IP العام».'});
+$('lookup').addEventListener('click',async()=>{
+ const ip=$('ipInput').value.trim();const out=$('lookupResult');const b=$('lookup'); 
+ if(!ip){out.textContent='أدخل عنوان IP أولًا.';return}
+ // Basic format check; authoritative validation is done by the lookup service.
+ const v4=/^(?:\d{1,3}\.){3}\d{1,3}$/.test(ip);
+ const v6=/^[0-9a-fA-F:]+$/.test(ip)&&ip.includes(':');
+ if(!v4&&!v6){out.textContent='صيغة IP غير صحيحة. أدخل IPv4 أو IPv6.';return}
+ b.disabled=true;out.textContent='جارٍ جلب معلومات تقريبية…';
+ try{
+  const r=await fetch('https://ipwho.is/'+encodeURIComponent(ip),{cache:'no-store'});
+  if(!r.ok)throw new Error();
+  const d=await r.json();if(d.success===false)throw new Error(d.message||'Lookup failed');
+  const parts=[['IP',d.ip],['البلد',d.country],['المنطقة',d.region],['المدينة',d.city],['مزوّد الإنترنت',d.connection?.isp],['المنظمة',d.connection?.org],['المنطقة الزمنية',d.timezone?.id]];
+  out.replaceChildren();
+  for(const [label,val] of parts){if(val){const line=document.createElement('div');line.textContent=label+': '+val;out.appendChild(line)}}
+  const note=document.createElement('div');note.className='small';note.style.marginTop='8px';note.textContent='الموقع تقريبي وقد يكون غير دقيق، خصوصًا مع VPN أو شبكات الهاتف.';out.appendChild(note);
+ }catch(e){out.textContent='تعذر جلب المعلومات. تأكد من العنوان والاتصال بالإنترنت.'}
+ finally{b.disabled=false}
+});
+$('checkNet').addEventListener('click',async()=>{
+ const b=$('checkNet'),out=$('netResult');b.disabled=true;out.textContent='جارٍ اختبار الاتصال…';
+ const targets=[['Cloudflare','https://www.cloudflare.com/cdn-cgi/trace'],['Google','https://www.google.com/generate_204']];
+ let passed=0;
+ for(const [name,url] of targets){
+  const t=Date.now();
+  try{await fetch(url,{mode:'no-cors',cache:'no-store'});passed++;out.textContent+='';}
+  catch(e){}
+ }
+ out.textContent=passed?'الاتصال بالإنترنت يبدو متاحًا. (قد تمنع إعدادات المتصفح قياسًا أدق للاتصال).':'تعذر تأكيد الاتصال من المتصفح. قد يكون السبب الشبكة أو قيود CORS.';
+ b.disabled=false;
+});
+// Decorative Matrix rain, respects reduced-motion preference.
+const c=$('matrix'),ctx=c.getContext('2d');let cols=[],font=14;
+function resize(){c.width=innerWidth*devicePixelRatio;c.height=innerHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);font=14;cols=Array(Math.ceil(innerWidth/font)).fill(0).map(()=>Math.random()*innerHeight/font)}
+resize();addEventListener('resize',resize);
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+ setInterval(()=>{ctx.fillStyle='rgba(5,8,7,0.12)';ctx.fillRect(0,0,innerWidth,innerHeight);ctx.fillStyle='#38ff87';ctx.font=font+'px monospace';cols.forEach((y,i)=>{ctx.fillText(Math.random()>.5?'1':'0',i*font,y*font);if(y*font>innerHeight&&Math.random()>.98)cols[i]=0;else cols[i]=y+1})},65);
+}
+</script>
+</body>
+</html>
